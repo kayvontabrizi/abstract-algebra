@@ -1,11 +1,8 @@
-# Setup script
+import setuptools
 
-from distutils.core import setup
-
-setup(name='absalg',
-      version='0.0.1',
-      description='Abstract Algebra in Python',
-      author='Naftali Harris',
-      author_email='naftali@stanford.edu',
-      packages=['absalg'],
-     )
+setuptools.setup(
+	name='algebra',
+	version='0.1',
+	packages=setuptools.find_packages(),
+	description='Abstract Algebra in Python',
+)

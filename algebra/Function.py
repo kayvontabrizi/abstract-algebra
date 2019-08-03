@@ -1,7 +1,6 @@
-"""
-Definition of a function
-"""
+"""Function Implementation"""
 
+# local imports
 from Set import Set
 
 class Function:

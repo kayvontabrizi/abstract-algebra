@@ -1,9 +1,11 @@
-"""Group implementation"""
+"""Group Implementation"""
 
-import itertools
-
+# local imports
 from Set import Set
 from Function import Function
+
+# imports
+import itertools
 
 class GroupElem:
     """
