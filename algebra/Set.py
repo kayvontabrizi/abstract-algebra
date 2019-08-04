@@ -1,26 +1,36 @@
-"""
-Implementation of Set
-"""
+"""Set Implementation"""
 
+# define Set class
 class Set(frozenset):
     """
-    Definition of a Set
+    Implementation of a set
     
-    It's important that Set be a subclass of frozenset, (not set), because:
+    It's important that Set be a subclass of frozenset (not set) because:
     1) it makes Set immutable
     2) it allows Set to contains Sets
     """
-    def __mul__(self, other):
-        """Cartesian product"""
-        if not isinstance(other, Set):
-            raise TypeError("One of the objects is not a set")
-        return Set((x, y) for x in self for y in other)
 
-    def pick(self):
-        """Return an arbitrary element. (The finite Axiom of Choice is true!)"""
+    # define set product
+    def __mul__(self, other_set):
+        """Returns Cartesian product."""
 
-        if len(self) == 0:
-            raise KeyError("This is an empty set")
+        # check that the other_set object is a Set
+        if not isinstance(other_set, Set):
+            raise TypeError("One of these objects is not a Set!")
 
-        for item in self: break
-        return item
+        # return set product
+        return Set((x, y) for x in self for y in other_set)
+
+    # define set exponentiation
+    def __pow__(self, exponent):
+        """Syntactic sugar for repeated Cartesian product."""
+
+        # check that the exponent is an integer
+        if not isinstance(exponent, int):
+            raise TypeError("The exponent must be an integer!")
+
+        # calculate and return set products
+        set_prod = self
+        for i in range(exponent-1):
+            set_prod *= self
+        return Set(set_prod)
