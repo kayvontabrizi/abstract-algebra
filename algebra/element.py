@@ -78,7 +78,7 @@ class Element(object):
             return self.group.e
         # if the exponent is negative, return the exponentiated inverse
         elif exponent < 0:
-            return self.group.inverse(self) ** -exponent
+            return self.group.invert(self) ** -exponent
         # if the exponent is odd, decompose into even + 1
         elif exponent % 2 == 1:
             return self * (self ** (exponent - 1))
@@ -102,7 +102,7 @@ class Element(object):
             if self.group.is_abelian():
                 return self ** elem
             # otherwise, complain that the element is not from an Abelian group
-            raise ValueError("Cannot self-mulitply elements of non-Abelian groups!")
+            raise ValueError("Cannot self-multiply Elements of non-Abelian groups!")
         # otherwise, check that elem is an Element
         elif not isinstance(elem, Element):
             raise TypeError("The other elem must be a Element or an integer.")
@@ -134,7 +134,7 @@ class Element(object):
             if self.group.is_abelian():
                 return self ** elem
             # otherwise, complain that the element is not from an Abelian group
-            raise ValueError("Cannot self-mulitply elements of non-Abelian groups!")
+            raise ValueError("Cannot self-multiply Elements of non-Abelian groups!")
         # otherwise, check that elem is an Element
         elif not isinstance(elem, Element):
             raise TypeError("The other elem must be a Element or an integer.")
@@ -158,7 +158,7 @@ class Element(object):
         """Returns element inverse for an Abelian group."""
 
         # return inverse if element belongs to an Abelian group
-        if not self.group.is_abelian():
+        if self.group.is_abelian():
             return self ** -1
         # otherwise, complain
         else:
