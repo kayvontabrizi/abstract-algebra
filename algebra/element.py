@@ -1,123 +1,181 @@
 """Element Implementation"""
 
-# local imports
-from algebra import Group
-
-# # define Element class
-# class Element:
-#     """
-#     Implementation of a group element
+# define Element class
+class Element(object):
+    """
+    Implementation of a group element
     
-#     This is mainly syntactic sugar, so you can write stuff like g * h
-#     instead of group.bin_op(g, h), or group(g, h).
-#     """
+    This is mainly syntactic sugar, so you can write
+    things like g * h instead of group.bin_op(g, h).
+    """
 
-#     # initialization
-#     def __init__(self, elem, group):
-#         """Initialize an element as part of a group."""
+    # initialization
+    def __init__(self, elem, group):
+        """Initialize an element as part of a group."""
 
-#         # check that group is a Group
-#         if not isinstance(group, Group):
-#             print(type(group), type(Group), isinstance(group, Group))
-#             raise TypeError("group is not a Group")
+        # initialize super
+        super().__init__()
 
-#         # check that the element is in the group
-#         if not elem in group.elements:
-#             raise ValueError("elem is not an element of group")
+        # delay group import to avoid circular import issues
+        from .group import Group
 
-#         # record element and group
-#         self.elem = elem
-#         self.group = group
+        # check that group is a Group
+        if not isinstance(group, Group):
+            raise TypeError("The group must be a Group object!")
 
-#     def __str__(self):
-#         return str(self.elem)
+        # check that the element is in the group
+        if not elem in group.elements:
+            raise ValueError("The element is not in the group.")
 
-#     def __eq__(self, other):
-#         """
-#         Two Elements are equal if they represent the same element,
-#         regardless of the Groups they belong to
-#         """
+        # record element and group
+        self.elem = elem
+        self.group = group
 
-#         if not isinstance(other, Element):
-#             raise TypeError("other is not a Element")
-#         return self.elem == other.elem
+    # return string representation of element
+    def __repr__(self):
+        return str(self.elem)
 
-#     def __ne__(self, other):
-#         return not self == other
+    # check element equality
+    def __eq__(self, other_elem):
+        """
+        Two Elements are equal if they represent the same element,
+        regardless of the Groups they belong to.
+        """
 
-#     def __hash__(self):
-#         return hash(self.elem)
+        # check that other element is an Element
+        if not isinstance(other_elem, Element):
+            raise TypeError("The other_elem must be an Element!")
 
-#     def __mul__(self, other):
-#         """
-#         If other is a group element, returns self * other.
-#         If other = n is an int, and self is in an abelian group, returns self**n
-#         """
-#         if self.group.is_abelian() and isinstance(other, (int, long)):
-#             return self ** other
+        # return equality of the underlying elements
+        return self.elem == other_elem.elem
 
-#         if not isinstance(other, Element):
-#             raise TypeError("other must be a Element, or an int " \
-#                             "(if self's group is abelian)")
-#         try:
-#             return Element(self.group.bin_op((self.elem, other.elem)), \
-#                              self.group)
-#         # This can return a TypeError in Funcion.__call__ if self and other
-#         # belong to different Groups. So we see if we can make sense of this
-#         # operation the other way around.
-#         except TypeError:
-#             return other.__rmul__(self)
+    # check inequality
+    def __ne__(self, other):
+        return not self == other
 
-#     def __rmul__(self, other):
-#         """
-#         If other is a group element, returns other * self.
-#         If other = n is an int, and self is in an abelian group, returns self**n
-#         """
-#         if self.group.is_abelian() and isinstance(other, (int, long)):
-#             return self ** other
+    # generate a hash of the underlying element
+    def __hash__(self):
+        return hash(self.elem)
 
-#         if not isinstance(other, Element):
-#             raise TypeError("other must be a Element, or an int " \
-#                             "(if self's group is abelian)")
-
-#         return Element(self.group.bin_op((other.elem, self.elem)), self.group)
-
-#     def __add__(self, other):
-#         """Returns self + other for Abelian groups"""
-#         if self.group.is_abelian():
-#             return self * other
-#         raise TypeError("not an element of an abelian group")
+    # define element exponentiation
+    def __pow__(self, exponent, modulo=None):
+        """
+        Returns the element raised to the exponent.
         
-#     def __pow__(self, n, modulo=None):
-#         """
-#         Returns self**n
-        
-#         modulo is included as an argument to comply with the API, and ignored
-#         """
-#         if not isinstance(n, (int, long)):
-#             raise TypeError("n must be an int or a long")
+        The element exponentiation is implemented recursively as a
+        combination of element products.
 
-#         if n == 0:
-#             return self.group.e
-#         elif n < 0:
-#             return self.group.inverse(self) ** -n
-#         elif n % 2 == 1:
-#             return self * (self ** (n - 1))
-#         else:
-#             return (self * self) ** (n / 2)
+        `modulo` is included as an argument to comply with the API, but
+        is otherwise ignored.
+        """
 
-#     def __neg__(self):
-#         """Returns self ** -1 if self is in an abelian group"""
-#         if not self.group.is_abelian():
-#             raise TypeError("self must be in an abelian group")
-#         return self ** (-1)
+        # check that the exponent is an integer
+        if not isinstance(exponent, int):
+            raise TypeError("The exponent must be an integer!")
 
-#     def __sub__(self, other):
-#         """Returns self * (other ** -1) if self is in an abelian group"""
-#         if not self.group.is_abelian():
-#             raise TypeError("self must be in an abelian group")
-#         return self * (other ** -1)
+        # if exponent is 0, return the group identity
+        if exponent == 0:
+            return self.group.e
+        # if the exponent is negative, return the exponentiated inverse
+        elif exponent < 0:
+            return self.group.inverse(self) ** -exponent
+        # if the exponent is odd, decompose into even + 1
+        elif exponent % 2 == 1:
+            return self * (self ** (n - 1))
+        # if the exponent is even, decompose into a product
+        else:
+            return (self * self) ** (n / 2)
 
-#     def order(self):
-#         """Returns the order of self in the Group"""
-#         return len(self.group.generate([self]))
+    # define element left-multiplication
+    def __mul__(self, elem):
+        """
+        If elem is a group element, returns self * elem.
+        If elem is an int, and self is in an Abelian group, returns self**elem.
+
+        This product assumes that both elements are in self.group. If this
+        assumption fails, the equivalent product is attempted with elem.group.
+        """
+
+        # check if elem is an integer
+        if isinstance(elem, int):
+            # if the group is Abelian, return self-multiplication product
+            if self.group.is_abelian():
+                return self ** elem
+            # otherwise, complain that the element is not from an Abelian group
+            raise ValueError("Cannot self-mulitply elements of non-Abelian groups!")
+        # otherwise, check that elem is an Element
+        elif not isinstance(elem, Element):
+            raise TypeError("The other elem must be a Element or an integer.")
+
+        # attempt to return the element product
+        try:
+            return Element(self.group.bin_op(self.elem, elem.elem), self.group)
+        # This can return a ValueError in Funcion.__call__ if self and elem
+        # belong to different Groups. In this case, we'll try the equivalent product
+        # with the other element's group, with a warning.
+        except ValueError:
+            print("WARNING: These elements come from different groups, "\
+                  "the results may be unexpected.")
+            return elem.__rmul__(self)
+
+    # define element right-multiplication
+    def __rmul__(self, elem):
+        """
+        If elem is a group element, returns elem * self.
+        If elem is an int, and self is in an Abelian group, returns self**elem
+
+        As an element product, this should only be triggered if a left multiply
+        fails, in which case the product is re-attempted with what is now self.group.
+        """
+
+        # check if elem is an integer
+        if isinstance(elem, int):
+            # if the group is Abelian, return self-multiplication product
+            if self.group.is_abelian():
+                return self ** elem
+            # otherwise, complain that the element is not from an Abelian group
+            raise ValueError("Cannot self-mulitply elements of non-Abelian groups!")
+        # otherwise, check that elem is an Element
+        elif not isinstance(elem, Element):
+            raise TypeError("The other elem must be a Element or an integer.")
+
+        # return the element product with a warning
+        return Element(self.group.bin_op((elem.elem, self.elem)), self.group)
+
+    # returns element product for Abelian groups
+    def __add__(self, elem):
+        """Returns self + elem for Abelian groups."""
+
+        # return product if both elements belong to Abelian groups
+        if self.group.is_abelian() and elem.group.is_abelian():
+            return self * elem
+        # otherwise, complain
+        else:
+            raise ValueError("Both Elements must belong to Abelian groups.")
+
+    # returns element inverse for Abelian groups
+    def __neg__(self):
+        """Returns element inverse for an Abelian group."""
+
+        # return inverse if element belongs to an Abelian group
+        if not self.group.is_abelian():
+            return self ** -1
+        # otherwise, complain
+        else:
+            raise ValueError("Element must belong to an Abelian group.")
+
+    # returns the product of this element with another's inverse
+    def __sub__(self, elem):
+        """Returns self * (elem ** -1) for Abelian groups."""
+
+        # return product if both elements belong to Abelian groups
+        if self.group.is_abelian() and elem.group.is_abelian():
+            return self * (elem ** -1)
+        # otherwise, complain
+        else:
+            raise ValueError("Both Elements must belong to Abelian groups.")
+
+    # TODO
+    # def order(self):
+    #     """Returns the order of self in the Group"""
+    #     return len(self.group.generate([self]))

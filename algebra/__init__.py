@@ -1,5 +1,6 @@
 # import all definitions to algebra
-from algebra.set import *
-from algebra.function import *
-from algebra.element import *
-from algebra.group import *
+from .set import *
+from .function import *
+from .element import *
+from .group import *
+from .group_functions import *

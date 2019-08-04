@@ -22,8 +22,13 @@ class Set(frozenset):
         return Set((x, y) for x in self for y in other_set)
 
     # define set exponentiation
-    def __pow__(self, exponent):
-        """Syntactic sugar for repeated Cartesian product."""
+    def __pow__(self, exponent, modulo=None):
+        """
+        Syntactic sugar for repeated Cartesian product.
+
+        `modulo` is included as an argument to comply with the API, but
+        is otherwise ignored.
+        """
 
         # check that the exponent is an integer
         if not isinstance(exponent, int):

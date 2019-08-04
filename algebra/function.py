@@ -1,10 +1,10 @@
 """Function Implementation"""
 
 # local imports
-from algebra import Set
+from . import Set
 
 # define Function class
-class Function:
+class Function(object):
     """Implementation of a finite function"""
 
     # initialization
@@ -15,6 +15,9 @@ class Function:
         This method can be overwritten by subclasses of Function, so that for
         example GroupHomomorphisms can be between Groups, rather than Sets.
         """
+
+        # initialize super
+        super().__init__()
 
         # check that domain is a Set
         if not isinstance(domain, Set):
@@ -105,6 +108,13 @@ class Function:
         For example, GroupHomomorphisms return the image as a Group, not a Set.
         """
         return self._image()
+
+    # return a string representation of the Function
+    def __repr__(self):
+        """Returns a string representation of the Function's domain and image."""
+
+        # return a list of the input/output pairs
+        return str([(x, self(x)) for x in self.domain])
 
     # return a pretty string representation of the Function
     def __str__(self):

@@ -1,18 +1,21 @@
 """Group Implementation"""
 
 # local imports
-from algebra import Set, Function
+from . import Set, Function, Element
 
 # imports
-import itertools
+import itertools        
 
 # define Group class
-class Group:
+class Group(object):
     """Implementation of a finite group"""
 
     # initialization
     def __init__(self, elements, bin_op, ordered=None):
         """Initialize a group and check group axioms."""
+
+        # initialize super
+        super().__init__()
 
         # check that elements is a Set
         if not isinstance(elements, Set):
@@ -20,7 +23,7 @@ class Group:
 
         # check that bin_op is a Function
         if not isinstance(bin_op, Function):
-            raise TypeError("The bin_op must be a function")
+            raise TypeError("The bin_op must be a Function")
 
         # verify bin_op codomain is equal to the elements
         if bin_op.codomain != elements:
@@ -30,29 +33,35 @@ class Group:
         if bin_op.domain != elements * elements:
             raise ValueError("The binary operation must have all element pairs as its domain.")
 
+        # record the binary operation, element representations, and set of Elements
+        #
+        # We have to be careful about the storage order here. Since we're passing self to
+        # to Element's __init__, it's important to store bin_op and elements first. We can
+        # now take advatange Element's syntactic simplicity.
+        #
+        self.bin_op = bin_op
+        self.elements = elements
+        self.set = Set(Element(elem, self) for elem in elements)
+
         # verify associativity for all element triplets
-        triplets = list(itertools.combinations(elements, 3))
-        if not all(bin_op(a, bin_op(b, c)) == bin_op(bin_op(a, b), c) for a, b, c in triplets):
+        triplets = list(itertools.combinations(self.set, 3))
+        if not all(a * (b * c) == (a * b) * c for a, b, c in triplets):
             raise ValueError("The binary operation is not associative.")
 
-        # verify that a single identity element is present
-        identities = [e for e in elements if all(bin_op(e, a) == a for a in elements)]
+        # verify that a single identity element is present and set that identity element
+        identities = [e for e in self.set if all(e * a == a for a in self.set)]
         if len(identities) != 1:
             raise ValueError("There must be one identity element.")
-
-        # record the elements, identity, and binary operation
-        self.bin_op = bin_op
-        self.set = Set((elem) for elem in elements)
-        self.e = (identities[0])
+        self.e = identities[0]
 
         # verify that inverses exist for each element
-        inverses = Set([a for a in elements if any(bin_op(a, b) == self.e for b in elements)])
+        inverses = Set([a for a in self.set if any(a * b == self.e for b in self.set)])
         if len(inverses) != len(elements):
             raise ValueError("Some elements are missing inverses!")
 
         # determine if the Group is Abelian and record
-        pairs = list(itertools.combinations(elements, 2))
-        self.abelian = all(bin_op(a, b) == bin_op(b, a) for a, b in pairs)
+        pairs = list(itertools.combinations(self.set, 2))
+        self.abelian = all(a * b == b * a for a, b in pairs)
 
         # set element order, if ordered provided
         self.order = None
@@ -62,7 +71,7 @@ class Group:
                 raise ValueError("The ordered and unordered elements do not match.")
 
             # determine ordered indicies
-            self.order = [list(self.set).index((elem)) for elem in ordered]
+            self.order = [list(self.set).index(Element(elem, self)) for elem in ordered]
 
     # iterate through Group elements
     def __iter__(self):
@@ -120,6 +129,13 @@ class Group:
     def __len__(self):
         return len(self.set)
 
+    # # return a string representation of the Group
+    # def __repr__(self):
+    #     """Returns a string representation of the Group's elements and function."""
+
+    #     # construct return string and return
+    #     return str(self.set)+'\n'+str(self.bin_op)
+
     # return a pretty string representation of the Group
     def __str__(self):
         """Returns the Cayley table, if possible."""
@@ -169,41 +185,15 @@ class Group:
         """Checks if the Group is Abelian."""
         return self.abelian
 
-    # return whether the Group is a subgroup of another
-    def __le__(self, other_group):
-        """Checks if this group is a subgroup of other_group."""
+    # return a dictionary of Group Elements
+    def get_elements(self):
+        """Returns a dictionary of the Group's Elements."""
 
-        # check that other_group is a Group
-        if not isinstance(other_group, Group):
-            raise TypeError("The other group must be a Group!")
-
-        # TODO
-        return self.set <= other_group.set and \
-               all(self.bin_op((a, b)) == other_group.bin_op((a, b)) \
-                   for a in self.set for b in self.set)
-
-    # TODO
-    def is_normal_subgroup(self, other):
-        """Checks if self is a normal subgroup of other"""
-        return self <= other and \
-               all(Set(g * h for h in self) == Set(h * g for h in self) \
-                   for g in other)
-
-    # TODO
-    def __div__(self, other):
-        """ Returns the quotient Group self / other """
-        if not other.is_normal_subgroup(self):
-            raise ValueError("other must be a normal subgroup of self")
-        G = Set(Set(self.bin_op((g, h)) for h in other.set) for g in self.set)
-
-        def multiply_cosets(x):
-            h = x[0].pick()
-            return Set(self.bin_op((h, g)) for g in x[1])
-
-        return Group(G, Function(G * G, G, multiply_cosets))
+        # construct and return the dictionary
+        return {elem: Element(elem, self) for elem in self.elements}
 
     # return the inverse of an element
-    def inverse(self, element):
+    def invert(self, element):
         """Returns the inverse of the given elemenet."""
 
         # check that the element if in the group
@@ -218,17 +208,50 @@ class Group:
         # throw an error if no inverse is found
         raise RuntimeError("Something's wrong--this element has no inverse!")
 
-    # TODO
-    def __mul__(self, other):
-        """Returns the cartesian product of the two groups"""
-        if not isinstance(other, Group):
-            raise TypeError("other must be a group")
-        bin_op = Function((self.set * other.set) * (self.set * other.set), \
-                             (self.set * other.set), \
-                             lambda x: (self.bin_op((x[0][0], x[1][0])), \
-                                        other.bin_op((x[0][1], x[1][1]))))
+    # # TODO
+    # # return whether the Group is a subgroup of another
+    # def __le__(self, other_group):
+    #     """Checks if this group is a subgroup of other_group."""
 
-        return Group(self.set * other.set, bin_op)
+    #     # check that other_group is a Group
+    #     if not isinstance(other_group, Group):
+    #         raise TypeError("The other group must be a Group!")
+
+    #     return self.set <= other_group.set and \
+    #            all(self.bin_op((a, b)) == other_group.bin_op((a, b)) \
+    #                for a in self.set for b in self.set)
+
+    # # TODO
+    # def is_normal_subgroup(self, other):
+    #     """Checks if self is a normal subgroup of other"""
+    #     return self <= other and \
+    #            all(Set(g * h for h in self) == Set(h * g for h in self) \
+    #                for g in other)
+
+    # # TODO
+    # def __div__(self, other):
+    #     """ Returns the quotient Group self / other """
+    #     if not other.is_normal_subgroup(self):
+    #         raise ValueError("other must be a normal subgroup of self")
+    #     G = Set(Set(self.bin_op((g, h)) for h in other.set) for g in self.set)
+
+    #     def multiply_cosets(x):
+    #         h = x[0].pick()
+    #         return Set(self.bin_op((h, g)) for g in x[1])
+
+    #     return Group(G, Function(G * G, G, multiply_cosets))
+
+    # # TODO
+    # def __mul__(self, other):
+    #     """Returns the cartesian product of the two groups"""
+    #     if not isinstance(other, Group):
+    #         raise TypeError("other must be a group")
+    #     bin_op = Function((self.set * other.set) * (self.set * other.set), \
+    #                          (self.set * other.set), \
+    #                          lambda x: (self.bin_op((x[0][0], x[1][0])), \
+    #                                     other.bin_op((x[0][1], x[1][1]))))
+
+    #     return Group(self.set * other.set, bin_op)
 
     # # TODO
     # def generate(self, elems):
@@ -258,24 +281,24 @@ class Group:
 
     #     return Group(oldG, Function(oldG * oldG, oldG, self.bin_op.function))
 
-    # TODO
-    def is_cyclic(self):
-        """Checks if self is a cyclic Group"""
-        return any(g.order() == len(self) for g in self)
+    # # TODO
+    # def is_cyclic(self):
+    #     """Checks if self is a cyclic Group"""
+    #     return any(g.order() == len(self) for g in self)
 
-    # TODO
-    def subgroups(self):
-        """Returns the Set of self's subgroups"""
+    # # TODO
+    # def subgroups(self):
+    #     """Returns the Set of self's subgroups"""
 
-        old_sgs = Set([self.generate([self.e])])
-        while True:
-            new_sgs = old_sgs | Set(self.generate(list(sg.set) + [g]) \
-                                     for sg in old_sgs for g in self \
-                                     if g not in sg.set)
-            if new_sgs == old_sgs: break
-            else: old_sgs = new_sgs
+    #     old_sgs = Set([self.generate([self.e])])
+    #     while True:
+    #         new_sgs = old_sgs | Set(self.generate(list(sg.set) + [g]) \
+    #                                  for sg in old_sgs for g in self \
+    #                                  if g not in sg.set)
+    #         if new_sgs == old_sgs: break
+    #         else: old_sgs = new_sgs
 
-        return old_sgs
+    #     return old_sgs
 
     # # TODO
     # def generators(self):
@@ -297,100 +320,60 @@ class Group:
 
     #     return [Element(g, self) for g in result]
 
-    # TODO
-    def find_isomorphism(self, other):
-        """
-        Returns an isomorphic GroupHomomorphism between self and other,
-        or None if self and other are not isomorphic
+    # # TODO
+    # def find_isomorphism(self, other):
+    #     """
+    #     Returns an isomorphic GroupHomomorphism between self and other,
+    #     or None if self and other are not isomorphic
 
-        Uses Tarjan's algorithm, running in O(n^(log n + O(1))) time, but
-        runs a lot faster than that if the group has a small generating set.
-        """
-        if not isinstance(other, Group):
-            raise TypeError("other must be a Group")
+    #     Uses Tarjan's algorithm, running in O(n^(log n + O(1))) time, but
+    #     runs a lot faster than that if the group has a small generating set.
+    #     """
+    #     if not isinstance(other, Group):
+    #         raise TypeError("other must be a Group")
 
-        if len(self) != len(other) or self.is_abelian() != other.is_abelian():
-            return None
+    #     if len(self) != len(other) or self.is_abelian() != other.is_abelian():
+    #         return None
 
-        # Try to match the generators of self with some subset of other
-        A = self.generators()
-        for B in itertools.permutations(other, len(A)):
+    #     # Try to match the generators of self with some subset of other
+    #     A = self.generators()
+    #     for B in itertools.permutations(other, len(A)):
 
-            func = dict(itertools.izip(A, B)) # the mapping
-            counterexample = False
-            while not counterexample:
+    #         func = dict(itertools.izip(A, B)) # the mapping
+    #         counterexample = False
+    #         while not counterexample:
 
-                # Loop through the mapped elements so far, trying to extend the
-                # mapping or else find a counterexample
-                noobs = {}
-                for g, h in itertools.product(func, func):
-                    if g * h in func:
-                        if func[g] * func[h] != func[g * h]:
-                            counterexample = True
-                            break
-                    else: 
-                        noobs[g * h] = func[g] * func[h]
+    #             # Loop through the mapped elements so far, trying to extend the
+    #             # mapping or else find a counterexample
+    #             noobs = {}
+    #             for g, h in itertools.product(func, func):
+    #                 if g * h in func:
+    #                     if func[g] * func[h] != func[g * h]:
+    #                         counterexample = True
+    #                         break
+    #                 else: 
+    #                     noobs[g * h] = func[g] * func[h]
 
-                # If we've mapped all the elements of self, then it's a
-                # homomorphism provided we haven't seen any counterexamples.
-                if len(func) == len(self): 
-                    break
+    #             # If we've mapped all the elements of self, then it's a
+    #             # homomorphism provided we haven't seen any counterexamples.
+    #             if len(func) == len(self): 
+    #                 break
 
-                # Make sure there aren't any collisions before updating
-                imagelen = len(set(noobs.values()) | set(func.values()))
-                if imagelen != len(noobs) + len(func):
-                    counterexample = True
-                func.update(noobs)
+    #             # Make sure there aren't any collisions before updating
+    #             imagelen = len(set(noobs.values()) | set(func.values()))
+    #             if imagelen != len(noobs) + len(func):
+    #                 counterexample = True
+    #             func.update(noobs)
 
-            if not counterexample:
-                return GroupHomomorphism(self, other, lambda x: func[x])
+    #         if not counterexample:
+    #             return GroupHomomorphism(self, other, lambda x: func[x])
 
-        return None
+    #     return None
 
-    # TODO
-    def is_isomorphic(self, other):
-        """Checks if self and other are isomorphic"""
-        return bool(self.find_isomorphism(other))
-
-# # TODO
-# class GroupHomomorphism(Function):
-#     """
-#     The definition of a Group Homomorphism
-    
-#     A GroupHomomorphism is a Function between Groups that obeys the group
-#     homomorphism axioms.
-#     """
-
-#     def __init__(self, domain, codomain, function):
-#         """Check types and the homomorphism axioms; records the two groups"""
-
-#         if not isinstance(domain, Group):
-#             raise TypeError("domain must be a Group")
-#         if not isinstance(codomain, Group):
-#             raise TypeError("codomain must be a Group")
-#         if not all(function(elem) in codomain for elem in domain):
-#             raise TypeError("Function returns some value outside of codomain")
-
-#         if not all(function(a * b) == function(a) * function(b) \
-#                    for a in domain for b in domain):
-#             raise ValueError("function doesn't satisfy the homomorphism axioms")
-
-#         self.domain = domain
-#         self.codomain = codomain
-#         self.function = function
-
-#     def kernel(self):
-#         """Returns the kernel of the homomorphism as a Group object"""
-#         G = Set(g.elem for g in self.domain if self(g) == self.codomain.e)
-#         return Group(G, Function(G * G, G, self.domain.bin_op.function))
-
-#     def image(self):
-#         """Returns the image of the homomorphism as a Group object"""
-#         G = Set(g.elem for g in self._image())
-#         return Group(G, Function(G * G, G, self.codomain.bin_op.function))
-
-#     def is_isomorphism(self):
-#         return self.is_bijective()
+    # # TODO
+    # def is_isomorphic(self, other):
+    #     """Checks if self and other are isomorphic"""
+    #     return bool(self.find_isomorphism(other))
 
 # construct the additive group of integers modulo n
 def Zn(n):
@@ -430,7 +413,14 @@ def Sn(n):
 
 # construct the dihedral group of order 2n
 def Dn(n):
-    """Returns the dihedral group of order 2n."""
+    """
+    Returns the dihedral group of order 2n.
+    
+    Note, as a matter of convention, the group multiplication treats the
+    element on the right as the first operation. This is consistent with
+    "r2s" referring to a flip followed by two rotations. Thus, one should
+    expect that in D5, for example, r1 * r2s = r3s, and r1s * r2 = r4s.
+    """
 
     # construct elements
     ordered_elems = [elem%r for elem in ("r%s", "r%ss") for r in range(n)]
