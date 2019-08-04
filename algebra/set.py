@@ -34,6 +34,10 @@ class Set(frozenset):
         if not isinstance(exponent, int):
             raise TypeError("The exponent must be an integer!")
 
+        # complain if exponent is less than 1
+        if exponent < 1:
+            raise ValueError("The exponent must be at least 1.")
+
         # calculate and return set products
         set_prod = self
         for i in range(exponent-1):

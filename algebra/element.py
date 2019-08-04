@@ -81,10 +81,10 @@ class Element(object):
             return self.group.inverse(self) ** -exponent
         # if the exponent is odd, decompose into even + 1
         elif exponent % 2 == 1:
-            return self * (self ** (n - 1))
+            return self * (self ** (exponent - 1))
         # if the exponent is even, decompose into a product
         else:
-            return (self * self) ** (n / 2)
+            return (self * self) ** (exponent // 2)
 
     # define element left-multiplication
     def __mul__(self, elem):

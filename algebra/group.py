@@ -173,7 +173,7 @@ class Group(object):
         row_sep = '\n'+int_sep.join([hori*max_len for a in self])+'\n'
         ret_str += row_sep.join([
             col_sep.join([
-                to_symbol[self.bin_op(a, b)] for a in self
+                to_symbol[a * b] for a in self
             ]) for b in self
         ])
 

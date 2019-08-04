@@ -67,9 +67,8 @@ class Function(object):
         # def jim(x): return x + 1, have different hashes, so we can't include 
         # the hash of self.function.
         #
-        # Finally, we should make sure that if you switch the domain and 
-        # codomain, the hash will (usually) change, so you can't just add or
-        # multiply the hashes together.
+        # Finally, we should make the combination of hashes non-commutative,
+        # so that switching the domain and codomain results in a new hash.
 
         # return hash
         return hash(self.domain) + 2 * hash(self.codomain)
@@ -121,10 +120,10 @@ class Function(object):
         """Returns a pretty string representation of a Function."""
 
         # construct return string and return
-        ret_str  = "Image:"
+        ret_str  = "Domain & Image:"
         ret_str += ''.join(f"\n{x} -> {self(x)}" for x in self.domain)
-        ret_str += "\nRemaining codomain:"
-        ret_str += ''.join(f"\n{x} -> {self(x)}" for x in self.codomain - self._image())
+        ret_str += "\nRemaining Codomain:"
+        ret_str += ''.join(f"\n -> {x}" for x in self.codomain - self._image())
         return ret_str
 
     # check that the function is surjective
