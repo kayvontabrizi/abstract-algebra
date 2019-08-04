@@ -66,45 +66,120 @@ class TestClass(object):
 
     # test Group methods
     def test_group_methods(self):
-        pass
+        # construct the multiplicative group of integers modulo 5
+        g = Set(range(1, 5))
+        func = lambda x: (x[0] * x[1]) % 5
+        f = Function(g**2, g, func)
+        G = Group(g, f)
+        h = Function(g**2, g, lambda y: 1 * (y[0] * y[1]) % 5)
+        H = Group(Set([1, 2, 3, 4]), h)
 
-    # TODO
-    # def test_Zn(self):
-    #     for n in range(1, 10):
-    #         Z = Zn(n)
-    #         str(Z)
-    #         self.assertEquals(Z.e, GroupElem(0,Z))
-    #         self.assertEquals(len(Z), n)
-    #         self.assertTrue(all(a * b == GroupElem((a.elem + b.elem) % n, Z) for a in Z for b in Z))
-    #         self.assertTrue(all(Z.inverse(a) == GroupElem((n - a.elem) % n, Z) for a in Z))
-    #         self.assertTrue(Z.is_abelian())
-    #         self.assertTrue(Z <= Z)
-    #         self.assertTrue(Z.is_normal_subgroup(Z))
-    #         self.assertEquals(len(Z/Z), 1)
-    #         if n <= 5: # takes a while
-    #             self.assertEquals(len(Z * Z), n * n)
-    #         self.assertEquals(Z.generate(Z), Z)
+        # check iteration
+        assert list(G) == [Element(elem, G) for elem in g]
 
-    # def test_Sn(self):
-    #     for n in range(1, 5):
-    #         S = Sn(n)
-    #         str(S)
-    #         self.assertEquals(S.e, GroupElem(tuple(xrange(n)), S))
-    #         self.assertEquals(len(S), factorial(n))
-    #         self.assertTrue(all(S.inverse(a) == GroupElem( \
-    #                         tuple(dict((a.elem[j], j) for j in a.elem)[i] \
-    #                               for i in range(n)), S) \
-    #                         for a in S))
-    #         if n <= 2:
-    #             self.assertTrue(S.is_abelian())
-    #         else:
-    #             self.assertFalse(S.is_abelian())
-    #         self.assertTrue(S <= S)
-    #         self.assertTrue(S.is_normal_subgroup(S))
-    #         self.assertEquals(len(S/S), 1)
-    #         if n <= 3:
-    #             self.assertEquals(len(S * S), factorial(n)**2)
-    #         self.assertEquals(S.generate(S), S)
+        # check inclusion
+        assert Element(3, G) in G
+        assert 'element' not in G
+
+        # check equality and hashes
+        assert G == H
+        assert hash(G) == hash(H)
+
+        # check Group length
+        assert len(G) == len(g)
+
+        # test string representation
+        print(G)
+
+        # check is_abelian method
+        assert G.is_abelian()
+
+        # check get_elements method
+        assert G.get_elements() == {elem: Element(elem, G) for elem in g}
+
+        # check element inversion
+        assert G.invert(G.e) == G.e
+        assert G.invert(Element(2, G)) == Element(3, G)
+
+    # test Zn Group creation
+    def test_Zn(self):
+        # try various sizes
+        for n in range(1, 10):
+            # construct group
+            Z = Zn(n)
+
+            # check Group by printing
+            print(Z)
+
+            # check various group properties
+            assert Z.e == Element(0, Z)
+            assert len(Z) == n
+            assert all(
+                a * b == Element((a.elem + b.elem) % n, Z)
+                for a in Z for b in Z
+            )
+            assert all(Z.invert(a) == Element((n - a.elem) % n, Z) for a in Z)
+            assert Z.is_abelian()
+            # assert Z <= Z
+            # assert Z.is_normal_subgroup(Z)
+            # assert len(Z/Z), 1
+            # if n <= 5: assert len(Z * Z) == n * n
+            # assert Z.generate(Z) == Z
+
+    # test Sn Group creation
+    def test_Sn(self):
+        # try various sizes
+        for n in range(1, 5):
+            # construct group
+            S = Sn(n)
+
+            # check Group by printing
+            print(S)
+
+            # check various group properties
+            assert S.e == Element(''.join(map(str, range(n))), S)
+            assert len(S) == factorial(n)
+            assert all(
+                S.invert(a) == Element(
+                    ''.join(dict(
+                        (a.elem[int(j)], j) for j in a.elem
+                    )[str(i)] for i in range(n)),
+                S) for a in S
+            )
+            if n < 3: assert S.is_abelian()
+            else: assert not S.is_abelian()
+            # assert S <= S
+            # assert S.is_normal_subgroup(S)
+            # assert len(S/S), 1
+            # if n < 4: assert len(S * S) == factorial(n)**2
+            # assert S.generate(S) == S
+
+    # test Dn Group creation
+    def test_Dn(self):
+        # try various sizes
+        for n in range(1, 10):
+            # construct group
+            D = Dn(n)
+
+            # check Group by printing
+            print(D)
+
+            # check various group properties
+            assert D.e == Element('r0', D)
+            assert len(D) == 2*n
+            assert all(
+                D.invert(a) == Element((
+                    str(a) if 's' in str(a) else \
+                    f'r{(n-int(str(a)[1:]))%n}'
+                ), D) for a in D
+            )
+            if n < 3: assert D.is_abelian()
+            else: assert not D.is_abelian()
+            # assert D <= D
+            # assert D.is_normal_subgroup(D)
+            # assert len(D/D), 1
+            # if n < 4: assert len(D * D) == factorial(n)**2
+            # assert D.generate(D) == D
 
     # def test_subgroups(self):
     #     G = Zn(9)
