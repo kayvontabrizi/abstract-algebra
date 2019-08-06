@@ -2,6 +2,7 @@
 
 # local imports
 from . import Set, Function, Element
+from . import bin_op
 
 # imports
 import itertools        
@@ -173,8 +174,8 @@ class Group(object):
         row_sep = '\n'+int_sep.join([hori*max_len for a in self])+'\n'
         ret_str += row_sep.join([
             col_sep.join([
-                to_symbol[a * b] for a in self
-            ]) for b in self
+                to_symbol[a * b] for b in self
+            ]) for a in self
         ])
 
         # return return string
@@ -457,3 +458,8 @@ def Dn(n):
 
     # return a group
     return Group(elems, Function(elems**2, elems, multiply_rots_and_flips), ordered_elems)
+
+# shorthand to construct a group from a set and a two-argument function
+def group(input_set, func):
+    # return a group whose elements are input_set and whose operation is func
+    return Group(input_set, bin_op(input_set, func))

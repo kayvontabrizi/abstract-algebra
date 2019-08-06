@@ -3,6 +3,9 @@
 # local imports
 from . import Set
 
+# imports
+from inspect import signature
+
 # define Function class
 class Function(object):
     """Implementation of a finite function"""
@@ -183,3 +186,20 @@ def dict_func(input_dict):
 
     # return Function represented by the dictionary mapping
     return Function(Set(input_dict.keys()), Set(input_dict.values()), lambda x: input_dict[x])
+
+# shorthand to create a function mapping: s * s -> s
+def bin_op(input_set, func):
+    """Returns a function mapping (x=input_set): x * x -> x, via func."""
+
+    # verify input types
+    if not isinstance(input_set, Set):
+        raise TypeError("Input set must be a Set!")
+    if not callable(func):
+        raise TypeError("Input func must be callable!")
+
+    # verify that func takes exactly two argments
+    if not len(signature(func).parameters):
+        raise ValueError("Input func must be take exactly two arguments!")
+
+    # return Function represented by the dictionary mapping
+    return Function(input_set**2, input_set, lambda x: func(x[0], x[1]))
