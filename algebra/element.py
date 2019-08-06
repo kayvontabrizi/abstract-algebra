@@ -57,6 +57,10 @@ class Element(object):
     def __hash__(self):
         return hash(self.elem)
 
+    # return the underlying element
+    def __invert__(self):
+        return self.elem
+
     # define element exponentiation
     def __pow__(self, exponent, modulo=None):
         """

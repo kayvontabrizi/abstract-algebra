@@ -1,5 +1,11 @@
 """Set Implementation"""
 
+# local imports
+from . import utils
+
+# cast inherited set operators as Set
+@utils.castInheritedMethods(f'__{x}__' for x in 'and or sub xor'.split())
+
 # define Set class
 class Set(frozenset):
     """

@@ -209,22 +209,29 @@ class Group(object):
         # throw an error if no inverse is found
         raise RuntimeError("Something's wrong--this element has no inverse!")
 
-    # # TODO
-    # # return whether the Group is a subgroup of another
-    # def __le__(self, other_group):
-    #     """Checks if this group is a subgroup of other_group."""
+    # returns whether the Group is a subgroup of another Group
+    def __lt__(self, other_group):
+        """Evaluates whether this Group is a subgroup of another Group."""
 
-    #     # check that other_group is a Group
-    #     if not isinstance(other_group, Group):
-    #         raise TypeError("The other group must be a Group!")
+        # check that other_group is a Group
+        if not isinstance(other_group, Group):
+            raise TypeError("The other group must be a Group!")
 
-    #     return self.set <= other_group.set and \
-    #            all(self.bin_op((a, b)) == other_group.bin_op((a, b)) \
-    #                for a in self.set for b in self.set)
+        # check that self's set is a subset of other_group's, return early if not
+        subset = self.set < other_group.set
+
+        # return early if self's set is not a subset
+        if not subset: return False
+
+        # verify the binary operations are equivalent by brute force
+        bin_op = all(~(a*b) == other_group.bin_op(~a, ~b) for a, b in self.set**2)
+
+        # return true if both conditions are met
+        return bin_op
 
     # # TODO
     # def is_normal_subgroup(self, other):
-    #     """Checks if self is a normal subgroup of other"""
+    #     """Evaluates whether this Group is a normal subgroup of another Group."""
     #     return self <= other and \
     #            all(Set(g * h for h in self) == Set(h * g for h in self) \
     #                for g in other)

@@ -1,4 +1,5 @@
-# import all definitions to algebra
+# import everything to algebra namespace
+from . import utils
 from .set import *
 from .function import *
 from .element import *
