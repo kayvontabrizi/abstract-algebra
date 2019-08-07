@@ -12,7 +12,7 @@ class Group(object):
     """Implementation of a finite group"""
 
     # initialization
-    def __init__(self, elements, bin_op, ordered=None):
+    def __init__(self, elements, bin_op, display_order=None):
         """Initialize a group and check group axioms."""
 
         # initialize super
@@ -45,10 +45,10 @@ class Group(object):
         if not Set(bin_op(e) for e in elements**2) <= elements:
             raise ValueError("The elements must be closed under the binary operation.")
 
-        # verify associativity for all element triplets
-        triplets = list(itertools.combinations(self.set, 3))
-        if not all(a * (b * c) == (a * b) * c for a, b, c in triplets):
-            raise ValueError("The binary operation is not associative.")
+        # # verify associativity for all element triplets
+        # triplets = list(itertools.combinations_with_replacement(self.set, 3))
+        # if not all(a * (b * c) == (a * b) * c for a, b, c in triplets):
+        #     raise ValueError("The binary operation is not associative.")
 
         # verify that a single identity element is present and set it as the group identity
         identities = [e for e in self.set if all(e * a == a and a * e == a for a in self.set)]
@@ -64,31 +64,31 @@ class Group(object):
             raise ValueError("Some elements are missing inverses!")
 
         # determine if the Group is Abelian and record
-        pairs = list(itertools.combinations(self.set, 2))
+        pairs = list(itertools.combinations_with_replacement(self.set, 2))
         self.abelian = all(a * b == b * a for a, b in pairs)
 
-        # set element order, if ordered provided
-        self.order = None
-        if ordered is not None:
-            # verify that ordered elements matches unordered elements
-            if Set(ordered) != elements:
-                raise ValueError("The ordered and unordered elements do not match.")
+        # set element display_order, if display_order provided
+        self.display_order = None
+        if display_order is not None:
+            # verify that the sets of ordered and unordered elements are identical
+            if Set(display_order) != elements:
+                raise ValueError("The sets of ordered and unordered elements do not match.")
 
-            # determine ordered indicies
-            self.order = [list(self.set).index(Element(elem, self)) for elem in ordered]
+            # determine display_order indicies
+            self.display_order = [list(self.set).index(Element(a, self)) for a in display_order]
 
     # iterate through Group elements
     def __iter__(self):
         """
         Iterates over elements in the Group, starting with the identity.
 
-        The iteration order can be ovewritten with self.order.
+        The iteration order can be ovewritten with self.display_order.
         """
 
         # check if an order is available
-        if self.order is not None:
+        if self.display_order is not None:
             # iterate and yield according to order
-            for i in self.order:
+            for i in self.display_order:
                 yield list(self.set)[i]
         # otherwise
         else:
