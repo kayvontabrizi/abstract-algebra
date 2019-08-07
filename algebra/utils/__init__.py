@@ -26,3 +26,13 @@ def castInheritedMethods(method_strings):
 
     # return decorating function
     return decorator
+
+# https://stackoverflow.com/a/18833870/2529008
+#
+# determine whether input is prime
+#
+from math import sqrt
+def is_prime(n):
+    if n % 2 == 0 and n > 2:
+        return False
+    return all(n % i for i in range(3, int(sqrt(n)) + 1, 2))

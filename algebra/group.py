@@ -2,7 +2,7 @@
 
 # local imports
 from . import Set, Function, Element
-from . import bin_op
+from . import bin_op, utils
 
 # imports
 import itertools        
@@ -24,35 +24,38 @@ class Group(object):
 
         # check that bin_op is a Function
         if not isinstance(bin_op, Function):
-            raise TypeError("The bin_op must be a Function")
+            raise TypeError("The bin_op must be a Function!")
 
-        # verify bin_op codomain is equal to the elements
-        if bin_op.codomain != elements:
-            raise ValueError("The binary operation must have the elements as its codomain.")
-
-        # verify bin_op domain is equal to the element pairs
-        if bin_op.domain != elements * elements:
-            raise ValueError("The binary operation must have all element pairs as its domain.")
-
-        # record the binary operation, element representations, and set of Elements
+        # We have to be careful about the storage order here. Element.__init__ requires
+        # that group.elements be defined. Since we're passing self to Element's __init__,
+        # it's important to store self.elements first. We can then take advatange
+        # Element's syntactic simplicity in checking our group axioms.
         #
-        # We have to be careful about the storage order here. Since we're passing self to
-        # to Element's __init__, it's important to store bin_op and elements first. We can
-        # now take advatange Element's syntactic simplicity.
+        # record the binary operation, element representations, and set of Elements
         #
         self.bin_op = bin_op
         self.elements = elements
         self.set = Set(Element(elem, self) for elem in elements)
+
+        # verify bin_op domain includes the element pairs
+        if not elements**2 <= bin_op.domain:
+            raise ValueError("The binary operation must have all element pairs in its domain.")
+
+        # verify group closure
+        if not Set(bin_op(e) for e in elements**2) <= elements:
+            raise ValueError("The elements must be closed under the binary operation.")
 
         # verify associativity for all element triplets
         triplets = list(itertools.combinations(self.set, 3))
         if not all(a * (b * c) == (a * b) * c for a, b, c in triplets):
             raise ValueError("The binary operation is not associative.")
 
-        # verify that a single identity element is present and set that identity element
-        identities = [e for e in self.set if all(e * a == a for a in self.set)]
-        if len(identities) != 1:
-            raise ValueError("There must be one identity element.")
+        # verify that a single identity element is present and set it as the group identity
+        identities = [e for e in self.set if all(e * a == a and a * e == a for a in self.set)]
+        if len(identities) == 0:
+            raise ValueError("The group must have an identity element.")
+        elif len(identities) > 1:
+            raise RuntimeError("REPORT THIS ERROR: There are multiple identity elements.")
         self.e = identities[0]
 
         # verify that inverses exist for each element
@@ -195,7 +198,7 @@ class Group(object):
 
     # return the inverse of an element
     def invert(self, element):
-        """Returns the inverse of the given elemenet."""
+        """Returns the inverse of the given element."""
 
         # check that the element if in the group
         if not element in self.set:
@@ -394,6 +397,23 @@ def Zn(n):
     # construct elements and binary operation, then return a Group
     elems = Set(range(n))
     bin_op = Function(elems**2, elems, lambda x: (x[0] + x[1]) % n)
+    return Group(elems, bin_op)
+
+# construct the multiplicative group of integers modulo n
+def ZnX(n):
+    """
+    Returns the multiplicative group of integers modulo n.
+
+    This group is only well-defined for prime values of n > 1.
+    """
+
+    # complain if n is not a prime integer greater than 1
+    if n < 2 or not utils.is_prime(n):
+        raise ValueError("The group is only well-defined for prime values of n > 1.")
+
+    # construct elements and binary operation, then return a Group
+    elems = Set(range(1, n))
+    bin_op = Function(elems**2, elems, lambda x: x[0] * x[1] % n)
     return Group(elems, bin_op)
 
 # construct the group of n integer permutations

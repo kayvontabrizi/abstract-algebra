@@ -30,6 +30,12 @@ class Function(object):
         if not isinstance(codomain, Set):
             raise TypeError("The codomain must be a Set!")
 
+        # Verifying that the codomain contains the domain's image is
+        # equivalent to checking for closure when the domain is equal to the
+        # codomain**2, which is often the case in a group binary operation.
+        # However, in the case where a group's elements are a subset of its
+        # binary operation's codomain, the group must check its own closure.
+        #
         # verify codomain contains image of domain
         if not all(function(elem) in codomain for elem in domain):
             raise ValueError("Function returns a value outside of codomain.")
@@ -72,7 +78,7 @@ class Function(object):
         #
         # Finally, we should make the combination of hashes non-commutative,
         # so that switching the domain and codomain results in a new hash.
-
+        #
         # return hash
         return hash(self.domain) + 2 * hash(self.codomain)
 

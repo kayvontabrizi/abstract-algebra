@@ -144,7 +144,7 @@ class Element(object):
             raise TypeError("The other elem must be a Element or an integer.")
 
         # return the element product with a warning
-        return Element(self.group.bin_op((elem.elem, self.elem)), self.group)
+        return Element(self.group.bin_op(elem.elem, self.elem), self.group)
 
     # returns element product for Abelian groups
     def __add__(self, elem):

@@ -34,13 +34,15 @@ class TestClass(object):
         with pytest.raises(TypeError):
             Group(g, func)
 
-        # check for ValueErrors upon Group creation
-        with pytest.raises(ValueError) as error:
-            Group(g, Function(g**2, Set(range(6)), func))
-        assert "elements as its codomain" in str(error.value)
+        # check for elements outside of bin_op.domain ValueError
         with pytest.raises(ValueError) as error:
             Group(Set(range(6)), Function(g**2, Set(range(6)), func))
-        assert "element pairs as its domain" in str(error.value)
+        assert "element pairs in its domain" in str(error.value)
+
+        # check for closure ValueError
+        with pytest.raises(ValueError) as error:
+            Group(Set({1, 3}), f)
+        assert "must be closed" in str(error.value)
 
         # check for associativity ValueError
         with pytest.raises(ValueError) as error:
@@ -51,7 +53,7 @@ class TestClass(object):
         with pytest.raises(ValueError) as error:
             g_plus = Set(g|{6})
             Group(g_plus, Function(g_plus**2, g_plus, func))
-        assert "must be one identity" in str(error.value)
+        assert "must have an identity" in str(error.value)
 
         # check for inverse ValueError if 0 included in multiplicative group
         with pytest.raises(ValueError) as error:
