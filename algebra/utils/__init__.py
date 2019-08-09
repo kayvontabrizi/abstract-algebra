@@ -1,6 +1,5 @@
 # import everything to utils namespace
-
-## some convenience functions
+# (currently no submodules to import)
 
 # decorator to cast return values of inherited methods as decorated class
 def castInheritedMethods(method_strings):
@@ -30,9 +29,13 @@ def castInheritedMethods(method_strings):
 # https://stackoverflow.com/a/18833870/2529008
 #
 # determine whether input is prime
-#
 from math import sqrt
 def is_prime(n):
     if n % 2 == 0 and n > 2:
         return False
     return all(n % i for i in range(3, int(sqrt(n)) + 1, 2))
+
+# return the sign of a number
+def sgn(x):
+    assert x not in [0, float('nan')], "Input has no sign."
+    return type(x)(abs(x)/x)

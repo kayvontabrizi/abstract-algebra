@@ -2,6 +2,7 @@
 
 # local imports
 from . import Set
+from .utils import sgn
 
 # imports
 from inspect import signature
@@ -117,12 +118,12 @@ class Function(object):
         """
         return self._image()
 
-    # return a string representation of the Function
-    def __repr__(self):
-        """Returns a string representation of the Function's domain and image."""
+    # # return a string representation of the Function
+    # def __repr__(self):
+    #     """Returns a string representation of the Function's domain and image."""
 
-        # return a list of the input/output pairs
-        return str([(x, self(x)) for x in self.domain])
+    #     # return a list of the input/output pairs
+    #     return str([(x, self(x)) for x in self.domain])
 
     # return a pretty string representation of the Function
     def __str__(self):
@@ -209,3 +210,54 @@ def bin_op(input_set, func):
 
     # return Function represented by the dictionary mapping
     return Function(input_set**2, input_set, lambda x: func(x[0], x[1]))
+
+# Note, this operates on a mapping of the octonion elements.
+# In the notation of en.wikipedia.org/wiki/Octonion#Definition,
+# this mapping is: x -> sgn(x)*e_{abs(x)-1}.
+#
+# compute product of octonions
+def octonion_product(x, y):
+    # handle the identity
+    if 1 in {abs(x)}|{abs(y)}: return x*y
+
+    # return the identity with negated sign if x == y
+    if abs(x) == abs(y): return -1*sgn(x*y)
+
+    # return the signed epsilon element
+    epsilon = sum(k*oct_epsilon(abs(x)-1, abs(y)-1, k) for k in range(8))
+    return sgn(x*y)*sgn(epsilon)*(abs(epsilon)+1)
+
+# Note, this epsilon is defined as specified in
+# en.wikipedia.org/wiki/Octonion#Definition:
+#
+#   \varepsilon_{ijk} is a completely antisymmetric tensor with
+#   value +1 when ijk = 123, 145, 176, 246, 257, 347, 365.
+#
+# identify octonion product 3-cycles and their sign
+def oct_epsilon(*c):
+    # check cycle has distinct elements
+    if len(set(c)) < len(c): return 0
+
+    # rotate cycle to place smallest first
+    c = list(c)
+    while min(c) != c[0]:
+        c.insert(0, c.pop())
+
+    # return 0 if not in octonion cycle set
+    cycle_ints = [123, 145, 176, 246, 257, 347, 365]
+    cycle_sets = [set(map(int, str(s))) for s in cycle_ints]
+    if set(c) not in cycle_sets:
+        return 0
+
+    # return whether cycle order matches cycle_ints
+    return 2*(int(''.join(map(str, c))) in cycle_ints) - 1
+
+# compute product of octonion element strings
+def oct_prod(e_x, e_y):
+    # map element strings to integers
+    sgn_e_x, sgn_e_y = 2*('-' not in e_x)-1, 2*('-' not in e_y)-1
+    x, y = sgn_e_x*(int(e_x[-1])+1), sgn_e_y*(int(e_y[-1])+1)
+
+    # map returned integers to element strings
+    prod = octonion_product(x, y)
+    return ('-' if sgn(prod) < 0 else '')+'e'+str(abs(prod)-1)

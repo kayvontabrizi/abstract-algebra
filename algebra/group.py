@@ -45,11 +45,6 @@ class Group(object):
         if not Set(bin_op(e) for e in elements**2) <= elements:
             raise ValueError("The elements must be closed under the binary operation.")
 
-        # # verify associativity for all element triplets
-        # triplets = list(itertools.combinations_with_replacement(self.set, 3))
-        # if not all(a * (b * c) == (a * b) * c for a, b, c in triplets):
-        #     raise ValueError("The binary operation is not associative.")
-
         # verify that a single identity element is present and set it as the group identity
         identities = [e for e in self.set if all(e * a == a and a * e == a for a in self.set)]
         if len(identities) == 0:
@@ -57,6 +52,11 @@ class Group(object):
         elif len(identities) > 1:
             raise RuntimeError("REPORT THIS ERROR: There are multiple identity elements.")
         self.e = identities[0]
+
+        # verify associativity for all element triplets
+        triplets = list(itertools.combinations_with_replacement(self.set, 3))
+        if not all(a * (b * c) == (a * b) * c for a, b, c in triplets):
+            raise ValueError("The binary operation is not associative.")
 
         # verify that inverses exist for each element
         inverses = Set([a for a in self.set if any(a * b == self.e for b in self.set)])

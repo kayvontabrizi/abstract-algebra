@@ -21,12 +21,12 @@ class TestClass(object):
         # generate Cayley table via printing
         print(G)
 
-        # manually check its binary operation, elements, set, identity, and order
+        # manually check its various attributes
         assert G.bin_op == f
         assert G.elements == g
         assert G.set == Set(Element(a, G) for a in g)
         assert G.e == Element(1, G)
-        assert G.order == None
+        assert G.display_order == None
 
         # check for TypeErrors upon Group creation
         with pytest.raises(TypeError):
@@ -44,9 +44,14 @@ class TestClass(object):
             Group(Set({1, 3}), f)
         assert "must be closed" in str(error.value)
 
-        # check for associativity ValueError
+        # check for associativity ValueError by attempting to construct
+        # a group under octonion multiplication, which is non-associative
+        e_p = Set(map(lambda x: f'e{x}', range(8)))
+        e_m = Set(map(lambda x: f'-e{x}', range(8)))
+        e_s = e_p|e_m
+        octonion_prod = lambda x: oct_prod(x[0], x[1])
         with pytest.raises(ValueError) as error:
-            Group(g, Function(g**2, g, lambda x: 1 + (x[0] * x[1]) % 4))
+            Group(e_s, Function(e_s**2, e_s, octonion_prod))
         assert "is not associative" in str(error.value)
 
         # check for multiple identities ValueError
@@ -63,7 +68,7 @@ class TestClass(object):
 
         # check for ordered/unordered mismatch ValueError
         with pytest.raises(ValueError) as error:
-            Group(g, f, ordered=[1, 2])
+            Group(g, f, display_order=[1, 2])
         assert "ordered and unordered" in str(error.value)
 
     # test Group methods
