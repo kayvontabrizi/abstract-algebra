@@ -179,7 +179,7 @@ class Element(object):
         else:
             raise ValueError("Both Elements must belong to Abelian groups.")
 
-    # TODO
-    # def order(self):
-    #     """Returns the order of self in the Group"""
-    #     return len(self.group.generate([self]))
+    # return the order of this element in its group
+    def order(self):
+        """Returns this element's order in its group."""
+        return len(self.group.generate([self]))

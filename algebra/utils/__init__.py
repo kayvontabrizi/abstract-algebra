@@ -29,8 +29,8 @@ def castInheritedMethods(method_strings):
 # https://stackoverflow.com/a/18833870/2529008
 #
 # determine whether input is prime
-from math import sqrt
 def is_prime(n):
+    from math import sqrt
     if n % 2 == 0 and n > 2:
         return False
     return all(n % i for i in range(3, int(sqrt(n)) + 1, 2))
@@ -39,3 +39,9 @@ def is_prime(n):
 def sgn(x):
     assert x not in [0, float('nan')], "Input has no sign."
     return type(x)(abs(x)/x)
+
+# shorthand for itertools.combinations/_with_replacement
+def combos(iterable, n, replacement=True):
+    from itertools import combinations, combinations_with_replacement
+    if replacement: return combinations_with_replacement(iterable, n)
+    else: return combinations(iterable, n)
